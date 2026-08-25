@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal Escolar para Padres</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0fdfa',
+                            100: '#ccfbf1',
+                            500: '#14b8a6',
+                            600: '#0d9488',
+                            900: '#134e4a',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+
+        /* Ocultar barra de desplazamiento para secciones pequeñas */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="text-gray-800">
+
+    <!-- Navbar -->
+    <nav class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <i class="fas fa-graduation-cap text-brand-600 text-3xl mr-3"></i>
+                    <span class="font-bold text-xl text-gray-900">EduPortal Padres</span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="relative">
+                        <button class="text-gray-500 hover:text-gray-700 focus:outline-none">
+                            <i class="fas fa-bell text-xl"></i>
+                            <span class="absolute top-0 right-0 block h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-white"></span>
+                        </button>
+                    </div>
+                    <div class="flex items-center">
+                        <img class="h-8 w-8 rounded-full object-cover border-2 border-brand-500" src="https://placehold.co/100x100/14b8a6/ffffff?text=P" alt="Perfil">
+                        <span class="ml-2 font-medium text-sm hidden sm:block" id="parent-name">Familia García</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- Student Selector -->
+        <div class="mb-8 flex items-center justify-between">
+            <h1 class="text-2xl font-bold text-gray-900">Resumen Académico</h1>
+            <select id="student-selector" class="block w-48 pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-brand-500 focus:border-brand-500 sm:text-sm rounded-md shadow-sm bg-white" onchange="changeStudent(this.value)">
+                <option value="0">Sofía García (6º Grado)</option>
+                <option value="1">Mateo García (3º Grado)</option>
+            </select>
+        </div>
+
+        <!-- Dashboard Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 fade-in" id="dashboard-content">
+            
+            <!-- Promedio General Card -->
+            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 flex flex-col justify-center items-center text-center">
+                <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wider mb-2">Promedio General</h3>
+                <div class="relative">
+                    <svg class="w-32 h-32 transform -rotate-90">
+                        <circle cx="64" cy="64" r="56" stroke="currentColor" stroke-width="8" fill="transparent" class="text-gray-100" />
+                        <circle cx="64" cy="64" r="56" stroke="currentColor" stroke-width="8" fill="transparent" class="text-brand-500" id="gpa-circle" stroke-dasharray="351.858" stroke-dashoffset="0" stroke-linecap="round" />
+                    </svg>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <span class="text-3xl font-bold text-gray-900" id="gpa-text">9.2</span>
+                    </div>
+                </div>
+                <p class="mt-4 text-sm text-green-600 font-medium"><i class="fas fa-arrow-up mr-1"></i>0.4 pts desde el último mes</p>
+            </div>
+
+            <!-- Asistencia Card -->
+            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 flex flex-col justify-between">
+                <div>
+                    <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wider mb-4">Asistencia (Ciclo Actual)</h3>
+                    <div class="flex justify-between items-end mb-2">
+                        <span class="text-4xl font-bold text-gray-900" id="attendance-text">98%</span>
+                        <span class="text-sm text-gray-500 mb-1" id="absences-text">2 faltas</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2.5">
+                        <div class="bg-blue-600 h-2.5 rounded-full" id="attendance-bar" style="width: 98%"></div>
+                    </div>
+                </div>
+                <button class="mt-4 w-full text-brand-600 text-sm font-medium hover:text-brand-800 text-left transition-colors" onclick="showModal('attendance')">Ver detalles de asistencia &rarr;</button>
+            </div>
+
+            <!-- Próxima Tarea Card -->
+            <div class="bg-gradient-to-br from-brand-500 to-brand-600 rounded-xl shadow-sm p-6 text-white flex flex-col justify-between">
+                <div>
+                    <div class="flex justify-between items-start">
+                        <h3 class="text-sm font-medium text-brand-100 uppercase tracking-wider mb-2">Próxima Entrega</h3>
+                        <span class="bg-white text-brand-600 text-xs font-bold px-2 py-1 rounded-full animate-pulse">Urgente</span>
+                    </div>
+                    <h4 class="text-xl font-bold mt-2" id="next-task-title">Proyecto de Ciencias</h4>
+                    <p class="text-brand-100 text-sm mt-1" id="next-task-subject"><i class="fas fa-book mr-2"></i>Ciencias Naturales</p>
+                </div>
+                <div class="mt-4 flex items-center">
+                    <i class="far fa-clock text-brand-200 mr-2"></i>
+                    <span class="text-sm font-medium" id="next-task-due">Mañana, 23:59 hrs</span>
+                </div>
+            </div>
+
+            <!-- Calificaciones por Materia (Gráfico) -->
+            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 md:col-span-2">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-bold text-gray-900">Evolución de Calificaciones</h3>
+                    <select class="text-sm border-gray-300 rounded-md focus:ring-brand-500 focus:border-brand-500">
+                        <option>Trimestre Actual</option>
+                        <option>Ciclo Completo</option>
+                    </select>
+                </div>
+                <div class="relative h-64 w-full">
+                    <canvas id="gradesChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Tareas Pendientes List -->
+            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 flex flex-col h-full">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-bold text-gray-900">Tareas Pendientes</h3>
+                    <span class="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded-full" id="task-count">3 Pendientes</span>
+                </div>
+                <div class="flex-1 overflow-y-auto pr-2 no-scrollbar" id="tasks-container">
+                    <!-- Tasks will be injected here via JS -->
+                </div>
+                <button class="mt-4 w-full text-center text-sm text-gray-500 hover:text-brand-600 font-medium transition-colors" onclick="showModal('tasks')">Ver todas las tareas</button>
+            </div>
+            
+            <!-- Últimas Calificaciones (Tabla) -->
+            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 md:col-span-3">
+                <h3 class="text-lg font-bold text-gray-900 mb-4">Últimas Actividades Evaluadas</h3>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Materia</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actividad</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Calificación</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Comentarios del Prof.</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200" id="recent-grades-tbody">
+                            <!-- Grades will be injected here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Generic Modal for details (hidden by default) -->
+    <div id="details-modal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <!-- Background overlay -->
+            <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" onclick="closeModal()"></div>
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <!-- Modal panel -->
+            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div class="sm:flex sm:items-start">
+                        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                            <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">Detalles</h3>
+                            <div class="mt-2" id="modal-content">
+                                <!-- Dynamic content -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <button type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm" onclick="closeModal()">
+                        Cerrar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Mock Data ---
+        const studentsData = [
+            {
+                id: 0,
+                name: "Sofía García",
+                grade: "6º Grado",
+                gpa: 9.2,
+                attendance: 98,
+                absences: 2,
+                chartData: [8.5, 8.8, 9.0, 9.2, 9.1, 9.5],
+                nextTask: { title: "Proyecto de Ciencias", subject: "Ciencias Naturales", due: "Mañana, 23:59 hrs", isUrgent: true },
+                tasks: [
+                    { title: "Ejercicios Fracciones", subject: "Matemáticas", due: "Hoy", status: "pending" },
+                    { title: "Lectura Cap. 4-5", subject: "Español", due: "Jueves", status: "pending" },
+                    { title: "Maqueta Célula", subject: "Biología", due: "Lunes prox.", status: "pending" }
+                ],
+                recentGrades: [
+                    { subject: "Matemáticas", activity: "Examen Parcial", date: "24/08/2026", grade: 9.5, comment: "Excelente razonamiento." },
+                    { subject: "Historia", activity: "Ensayo Revolución", date: "20/08/2026", grade: 8.8, comment: "Falta profundizar causas." },
+                    { subject: "Inglés", activity: "Speaking Test", date: "15/08/2026", grade: 10.0, comment: "Pronunciación perfecta." }
+                ]
+            },
+            {
+                id: 1,
+                name: "Mateo García",
+                grade: "3º Grado",
+                gpa: 8.5,
+                attendance: 92,
+                absences: 5,
+                chartData: [7.8, 8.0, 8.2, 8.5, 8.4, 8.7],
+                nextTask: { title: "Dibujo Familia", subject: "Arte", due: "Viernes, 12:00 hrs", isUrgent: false },
+                tasks: [
+                    { title: "Sumas y Restas", subject: "Matemáticas", due: "Mañana", status: "pending" },
+                    { title: "Traer material reciclado", subject: "Manualidades", due: "Viernes", status: "pending" }
+                ],
+                recentGrades: [
+                    { subject: "Español", activity: "Dictado", date: "25/08/2026", grade: 8.0, comment: "Mejorar ortografía." },
+                    { subject: "Matemáticas", activity: "Tablas de multiplicar", date: "21/08/2026", grade: 9.0, comment: "Muy bien." },
+                    { subject: "Educación Física", activity: "Coordinación", date: "18/08/2026", grade: 10.0, comment: "Participa con entusiasmo." }
+                ]
+            }
+        ];
+
+        let currentChart = null;
+
+        // --- UI Update Functions ---
+
+        function updateGPA(gpa) {
+            document.getElementById('gpa-text').innerText = gpa.toFixed(1);
+            const circle = document.getElementById('gpa-circle');
+            const circumference = 2 * Math.PI * 56; // 351.858
+            // Map GPA (0-10) to stroke-dashoffset (circumference to 0)
+            const offset = circumference - (gpa / 10) * circumference;
+            circle.style.strokeDashoffset = offset;
+            
+            // Color logic
+            if(gpa >= 9) circle.classList.replace('text-yellow-500', 'text-brand-500') || circle.classList.replace('text-red-500', 'text-brand-500');
+            else if(gpa >= 7) circle.classList.replace('text-brand-500', 'text-yellow-500') || circle.classList.replace('text-red-500', 'text-yellow-500');
+            else circle.classList.replace('text-brand-500', 'text-red-500') || circle.classList.replace('text-yellow-500', 'text-red-500');
+        }
+
+        function updateAttendance(attendance, absences) {
+            document.getElementById('attendance-text').innerText = `${attendance}%`;
+            document.getElementById('absences-text').innerText = `${absences} falta${absences !== 1 ? 's' : ''}`;
+            const bar = document.getElementById('attendance-bar');
+            bar.style.width = `${attendance}%`;
+            
+            bar.className = 'h-2.5 rounded-full ';
+            if(attendance >= 95) bar.className += 'bg-green-500';
+            else if(attendance >= 85) bar.className += 'bg-yellow-500';
+            else bar.className += 'bg-red-500';
+        }
+
+        function updateNextTask(task) {
+            document.getElementById('next-task-title').innerText = task.title;
+            document.getElementById('next-task-subject').innerHTML = `<i class="fas fa-book mr-2"></i>${task.subject}`;
+            document.getElementById('next-task-due').innerText = task.due;
+            
+            const urgentBadge = document.querySelector('.animate-pulse');
+            if(task.isUrgent) urgentBadge.style.display = 'block';
+            else urgentBadge.style.display = 'none';
+        }
+
+        function updateTasksList(tasks) {
+            const container = document.getElementById('tasks-container');
+            container.innerHTML = '';
+            document.getElementById('task-count').innerText = `${tasks.length} Pendiente${tasks.length !== 1 ? 's' : ''}`;
+
+            tasks.forEach(task => {
+                const taskEl = document.createElement('div');
+                taskEl.className = 'mb-3 pb-3 border-b border-gray-100 last:border-0 last:mb-0 last:pb-0';
+                taskEl.innerHTML = `
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0 mt-1">
+                            <input type="checkbox" class="h-4 w-4 text-brand-600 focus:ring-brand-500 border-gray-300 rounded cursor-pointer" title="Marcar como revisado por los padres">
+                        </div>
+                        <div class="ml-3 w-full">
+                            <p class="text-sm font-medium text-gray-900">${task.title}</p>
+                            <div class="flex justify-between items-center mt-1">
+                                <p class="text-xs text-gray-500">${task.subject}</p>
+                                <p class="text-xs font-semibold ${task.due.toLowerCase().includes('hoy') || task.due.toLowerCase().includes('mañana') ? 'text-red-500' : 'text-gray-500'}">
+                                    <i class="far fa-calendar-alt mr-1"></i>${task.due}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(taskEl);
+            });
+        }
+
+        function updateRecentGrades(grades) {
+            const tbody = document.getElementById('recent-grades-tbody');
+            tbody.innerHTML = '';
+            
+            grades.forEach(grade => {
+                let badgeColor = grade.grade >= 9 ? 'bg-green-100 text-green-800' : 
+                                 grade.grade >= 7 ? 'bg-yellow-100 text-yellow-800' : 
+                                 'bg-red-100 text-red-800';
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${grade.subject}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${grade.activity}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${grade.date}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${badgeColor}">
+                            ${grade.grade.toFixed(1)}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-sm text-gray-500 italic max-w-xs truncate" title="${grade.comment}">
+                        ${grade.comment || '-'}
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function updateChart(dataPoints) {
+            const ctx = document.getElementById('gradesChart').getContext('2d');
+            
+            if (currentChart) {
+                currentChart.destroy();
+            }
+
+            currentChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Sep', 'Oct', 'Nov', 'Dic', 'Ene', 'Feb'],
+                    datasets: [{
+                        label: 'Promedio Mensual',
+                        data: dataPoints,
+                        borderColor: '#14b8a6', // brand-500
+                        backgroundColor: 'rgba(20, 184, 166, 0.1)',
+                        borderWidth: 3,
+                        pointBackgroundColor: '#ffffff',
+                        pointBorderColor: '#14b8a6',
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                            titleColor: '#1f2937',
+                            bodyColor: '#1f2937',
+                            borderColor: '#e5e7eb',
+                            borderWidth: 1
+                        }
+                    },
+                    scales: {
+                        y: {
+                            min: 5,
+                            max: 10,
+                            grid: { borderDash: [4, 4], color: '#f3f4f6' }
+                        },
+                        x: {
+                            grid: { display: false }
+                        }
+                    },
+                    interaction: { mode: 'nearest', axis: 'x', intersect: false }
+                }
+            });
+        }
+
+        // --- Core Logic ---
+        
+        function changeStudent(studentId) {
+            const data = studentsData.find(s => s.id == studentId);
+            if (!data) return;
+
+            // Add fade animation class to main content area to make transition smooth
+            const dashboard = document.getElementById('dashboard-content');
+            dashboard.classList.remove('fade-in');
+            void dashboard.offsetWidth; // trigger reflow
+            dashboard.classList.add('fade-in');
+
+            // Update UI components
+            updateGPA(data.gpa);
+            updateAttendance(data.attendance, data.absences);
+            updateNextTask(data.nextTask);
+            updateTasksList(data.tasks);
+            updateRecentGrades(data.recentGrades);
+            updateChart(data.chartData);
+        }
+
+        // Modal functions
+        function showModal(type) {
+            const modal = document.getElementById('details-modal');
+            const title = document.getElementById('modal-title');
+            const content = document.getElementById('modal-content');
+            
+            const studentId = document.getElementById('student-selector').value;
+            const data = studentsData.find(s => s.id == studentId);
+
+            if (type === 'attendance') {
+                title.innerText = 'Detalles de Asistencia - ' + data.name;
+                content.innerHTML = `
+                    <p class="text-sm text-gray-500 mb-4">Total de días hábiles: 120</p>
+                    <ul class="divide-y divide-gray-200">
+                        <li class="py-3 flex justify-between">
+                            <span class="text-sm font-medium text-gray-900">Días Asistidos</span>
+                            <span class="text-sm text-green-600 font-bold">${120 - data.absences}</span>
+                        </li>
+                        <li class="py-3 flex justify-between">
+                            <span class="text-sm font-medium text-gray-900">Faltas Injustificadas</span>
+                            <span class="text-sm text-red-600 font-bold">${data.absences}</span>
+                        </li>
+                        <li class="py-3 flex justify-between">
+                            <span class="text-sm font-medium text-gray-900">Retardos</span>
+                            <span class="text-sm text-yellow-600 font-bold">1</span>
+                        </li>
+                    </ul>
+                    <div class="mt-4 p-3 bg-blue-50 rounded-md">
+                        <p class="text-xs text-blue-800"><i class="fas fa-info-circle mr-1"></i> Para justificar una falta, por favor contacte a la dirección escolar dentro de las siguientes 48 horas.</p>
+                    </div>
+                `;
+            } else if (type === 'tasks') {
+                title.innerText = 'Todas las Tareas - ' + data.name;
+                content.innerHTML = `
+                    <div class="space-y-4">
+                        ${data.tasks.map(t => `
+                            <div class="p-3 bg-gray-50 rounded-md border border-gray-200">
+                                <h4 class="font-medium text-gray-900">${t.title}</h4>
+                                <p class="text-xs text-gray-500 mt-1">${t.subject} - Entrega: <span class="font-semibold text-gray-700">${t.due}</span></p>
+                            </div>
+                        `).join('')}
+                        <div class="p-3 bg-gray-50 rounded-md border border-gray-200 opacity-50">
+                            <h4 class="font-medium text-gray-900 line-through">Resumen Historia</h4>
+                            <p class="text-xs text-gray-500 mt-1">Historia - <span class="text-green-600 font-semibold">Entregada</span></p>
+                        </div>
+                    </div>
+                `;
+            }
+
+            modal.classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('details-modal').classList.add('hidden');
+        }
+
+        // Initialize dashboard on load
+        window.onload = () => {
+            // Initialize with the first student in the select
+            changeStudent(document.getElementById('student-selector').value);
+        };
+
+    </script>
+</body>
+</html>
